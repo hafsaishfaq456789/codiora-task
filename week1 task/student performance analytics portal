@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Portal - My Task</title>
+<style>
+:root {
+  --primary: #4f46e5;
+  --dark: #1e293b;
+  --success: #16a34a;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+body { background: #f1f5f9; }
+.navbar {
+  background: var(--dark); color: white; display: flex; justify-content: space-between;
+  align-items: center; padding: 1rem 5%; position: sticky; top: 0;
+}
+.logo { font-weight: bold; color: #a5b4fc; font-size:1.2rem }
+.nav-links { display: flex; list-style: none; gap: 1.5rem; }
+.nav-links a { color: white; text-decoration: none; cursor: pointer; padding: 0.5rem; }
+.nav-links a.active { background: var(--primary); border-radius:6px; }
+.menu-toggle { display: none; font-size: 1.8rem; cursor: pointer; }
+
+.page { display: none; padding: 3rem 5%; min-height: 70vh; }
+.page.active { display: block; }
+h2 { border-left:4px solid var(--primary); padding-left:10px; margin-bottom:1rem; }
+
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; margin: 2rem 0; }
+.card { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: center; border-top: 4px solid var(--primary); }
+.card h3 { color: #64748b; font-size: 0.9rem; }
+.card p { font-size: 2rem; font-weight: bold; margin-top:0.5rem; }
+
+.table-wrapper { overflow-x: auto; margin-top:2rem; }
+table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; }
+th, td { padding: 1rem; text-align: left; border-bottom: 1px solid #e2e8f0; }
+th { background: var(--primary); color: white; }
+.status-pass { color: var(--success); font-weight: 600; }
+
+.form-box { background: white; padding: 2rem; border-radius: 12px; max-width: 600px; margin:2rem auto; }
+.form-box input, .form-box select { width: 100%; padding: 0.8rem; margin-bottom: 1rem; border: 2px solid #cbd5e1; border-radius: 6px; }
+.btn { background: var(--primary); color: white; padding: 0.8rem 1.5rem; border: none; border-radius: 6px; cursor: pointer; font-weight:600; }
+#successMsg { color: var(--success); margin-top:1rem; display:none; font-weight:600; }
+
+footer { background: var(--dark); color: #cbd5e1; text-align: center; padding: 2rem; margin-top: 3rem; }
+
+@media (max-width: 768px) {
+  .nav-links { display: none; flex-direction: column; position: absolute; top: 60px; left: 0; width: 100%; background: var(--dark); }
+  .nav-links.show { display: flex; }
+  .menu-toggle { display: block; }
+  .stats { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="logo">CODIORA Portal</div>
+  <ul class="nav-links" id="navLinks">
+    <li><a onclick="openPage('home')" class="active">Home</a></li>
+    <li><a onclick="openPage('about')">About</a></li>
+    <li><a onclick="openPage('dashboard')">Dashboard</a></li>
+    <li><a onclick="openPage('add')">Add Student</a></li>
+    <li><a onclick="openPage('report')">Report</a></li>
+    <li><a onclick="openPage('contact')">Contact</a></li>
+  </ul>
+  <div class="menu-toggle" onclick="menuOpen()">☰</div>
+</nav>
+
+<!-- Home -->
+<section id="home" class="page active">
+  <h2>Home Page</h2>
+  <div class="stats">
+    <div class="card"><h3>Total Students</h3><p>1240</p></div>
+    <div class="card"><h3>Average Score</h3><p>82%</p></div>
+    <div class="card"><h3>Pass Rate</h3><p>94%</p></div>
+    <div class="card"><h3>Top Subject</h3><p>Math</p></div>
+  </div>
+</section>
+
+<!-- About -->
+<section id="about" class="page">
+  <h2>About Us</h2>
+  <p style="margin:1rem 0;">Ye portal maine CODIORA internship ke liye banaya hai</p>
+  <div class="stats">
+    <div class="card"><h3>Mission</h3><p>Better Edu</p></div>
+    <div class="card"><h3>Vision</h3><p>Data Driven</p></div>
+    <div class="card"><h3>Tech</h3><p>HTML CSS JS</p></div>
+    <div class="card"><h3>Status</h3><p>Completed</p></div>
+  </div>
+</section>
+
+<!-- Dashboard - Yahan table hai jisme naya record add hoga -->
+<section id="dashboard" class="page">
+  <h2>Student Dashboard</h2>
+  <div class="stats">
+    <div class="card"><h3>Tests Done</h3><p>156</p></div>
+    <div class="card"><h3>Highest</h3><p>98%</p></div>
+    <div class="card"><h3>Lowest</h3><p>45%</p></div>
+    <div class="card"><h3>Attendance</h3><p>91%</p></div>
+  </div>
+  <h3 style="margin-top:2rem;">Student Records Table</h3>
+  <div class="table-wrapper">
+    <table id="studentTable">
+      <tr><th>ID</th><th>Name</th><th>Subject</th><th>Score</th><th>Status</th></tr>
+      <tr><td>001</td><td>Ali Khan</td><td>Math</td><td>88%</td><td class="status-pass">Pass</td></tr>
+      <tr><td>002</td><td>Sara Ahmed</td><td>Science</td><td>92%</td><td class="status-pass">Pass</td></tr>
+      <tr><td>003</td><td>Usman Malik</td><td>English</td><td>67%</td><td class="status-pass">Pass</td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- Add Student - Form + 4 cards -->
+<section id="add" class="page">
+  <h2>Add Student Data</h2>
+  <div class="stats">
+    <div class="card"><h3>Add New</h3><p>+</p></div>
+    <div class="card"><h3>Total</h3><p>1240</p></div>
+    <div class="card"><h3>Updated</h3><p>Today</p></div>
+    <div class="card"><h3>Check</h3><p>OK</p></div>
+  </div>
+  <div class="form-box">
+    <form onsubmit="return addStu(event)">
+      <input type="text" id="sname" placeholder="Student Name *" required>
+      <input type="text" id="sid" placeholder="Student ID *" required>
+      <select id="ssub" required>
+        <option value="">Select Subject *</option>
+        <option>Math</option><option>Science</option><option>English</option><option>Physics</option>
+      </select>
+      <input type="number" id="sscore" placeholder="Score % *" min="0" max="100" required>
+      <button class="btn">Add Record</button>
+    </form>
+    <p id="successMsg">✓ Student record added successfully in table below!</p>
+  </div>
+</section>
+
+<!-- Report -->
+<section id="report" class="page">
+  <h2>Performance Report</h2>
+  <div class="stats">
+    <div class="card"><h3>Math Avg</h3><p>85%</p></div>
+    <div class="card"><h3>Science Avg</h3><p>78%</p></div>
+    <div class="card"><h3>English Avg</h3><p>80%</p></div>
+    <div class="card"><h3>Computer Avg</h3><p>90%</p></div>
+  </div>
+</section>
+
+<!-- Contact -->
+<section id="contact" class="page">
+  <h2>Contact Us</h2>
+  <div class="stats">
+    <div class="card"><h3>Support</h3><p>24/7 Help</p></div>
+    <div class="card"><h3>Feedback</h3><p>We Listen</p></div>
+    <div class="card"><h3>Privacy</h3><p>Secure</p></div>
+    <div class="card"><h3>Response</h3><p>Quick</p></div>
+  </div>
+</section>
+
+<footer>
+  <p>CODIORA | Our Code Builds Your Vision</p>
+  <p>Internship Task 2026 | Made by: [Apna Naam Likho]</p>
+</footer>
+
+<script>
+// Page switch - maine khud likha
+function openPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.nav-links a').forEach(a=>a.classList.remove('active'));
+  event.target.classList.add('active');
+  window.scrollTo(0,0);
+  document.getElementById('navLinks').classList.remove('show');
+}
+
+// Mobile menu
+function menuOpen(){
+  document.getElementById('navLinks').classList.toggle('show');
+}
+
+// YE NAYA FUNCTION HAI - Student add karke table mein show kare ga
+function addStu(e){
+  e.preventDefault();
+  
+  // Form se data lena
+  let name = document.getElementById('sname').value;
+  let id = document.getElementById('sid').value;
+  let subject = document.getElementById('ssub').value;
+  let score = document.getElementById('sscore').value;
+  
+  // Pass/Fail check karna
+  let status = score >= 50 ? 'Pass' : 'Fail';
+  let statusClass = score >= 50 ? 'status-pass' : '';
+  
+  // Table mein naya row add karna
+  let table = document.getElementById('studentTable');
+  let newRow = table.insertRow(); // naya row ban gaya
+  
+  newRow.innerHTML = `
+    <td>${id}</td>
+    <td>${name}</td>
+    <td>${subject}</td>
+    <td>${score}%</td>
+    <td class="${statusClass}">${status}</td>
+  `;
+  
+  // Success message dikhana
+  document.getElementById('successMsg').style.display = 'block';
+  setTimeout(()=>{ document.getElementById('successMsg').style.display = 'none'; }, 3000);
+  
+  // Form reset kar dena
+  document.getElementById('sname').value = '';
+  document.getElementById('sid').value = '';
+  document.getElementById('ssub').value = '';
+  document.getElementById('sscore').value = '';
+  
+  return false;
+}
+</script>
+</body>
+</html>
