@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Portal - CODIORA</title>
+<style>
+:root {
+  --primary: #4f46e5;
+  --dark: #1e293b;
+  --success: #16a34a;
+  --danger: #dc2626;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+body { background: #f1f5f9; }
+
+/* Login Page */
+#loginPage { display: flex; justify-content: center; align-items: center; height: 100vh; }
+.login-box { background: white; padding: 2.5rem; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 90%; max-width: 400px; }
+.login-box h2 { text-align: center; margin-bottom: 1.5rem; color: var(--dark); }
+.login-box input { width: 100%; padding: 0.8rem; margin-bottom: 1rem; border: 2px solid #cbd5e1; border-radius: 6px; }
+.error { color: var(--danger); font-size: 0.9rem; margin-top: -0.5rem; margin-bottom: 1rem; display: none; }
+
+#app { display: none; } /* App login ke baad show hoga */
+
+.navbar {
+  background: var(--dark); color: white; display: flex; justify-content: space-between;
+  align-items: center; padding: 1rem 5%; position: sticky; top: 0; z-index: 10;
+}
+.logo { font-weight: bold; color: #a5b4fc; font-size:1.2rem }
+.nav-links { display: flex; list-style: none; gap: 1.5rem; align-items: center; }
+.nav-links a { color: white; text-decoration: none; cursor: pointer; padding: 0.5rem; }
+.nav-links a.active { background: var(--primary); border-radius:6px; }
+.btn-logout { background: var(--danger); padding: 0.5rem 1rem; border-radius: 6px; }
+.menu-toggle { display: none; font-size: 1.8rem; cursor: pointer; }
+
+.page { display: none; padding: 3rem 5%; min-height: 70vh; }
+.page.active { display: block; }
+h2 { border-left:4px solid var(--primary); padding-left:10px; margin-bottom:1rem; }
+
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; margin: 2rem 0; }
+.card { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: center; border-top: 4px solid var(--primary); transition: transform 0.2s; }
+.card:hover { transform: translateY(-5px); } 
+.card h3 { color: #64748b; font-size: 0.9rem; }
+.card p { font-size: 2rem; font-weight: bold; margin-top:0.5rem; }
+
+
+.table-controls { display: flex; gap: 1rem; margin: 1.5rem 0; flex-wrap: wrap; }
+.table-controls input,.table-controls select { padding: 0.7rem; border: 2px solid #cbd5e1; border-radius: 6px; }
+.table-wrapper { overflow-x: auto; margin-top:1rem; }
+table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; }
+th, td { padding: 1rem; text-align: left; border-bottom: 1px solid #e2e8f0; }
+th { background: var(--primary); color: white; cursor: pointer; } /* Sortable */
+th:hover { background: #3730a3; }
+.status-pass { color: var(--success); font-weight: 600; }
+.status-fail { color: var(--danger); font-weight: 600; }
+
+.form-box { background: white; padding: 2rem; border-radius: 12px; max-width: 600px; margin:2rem auto; }
+.form-box input,.form-box select { width: 100%; padding: 0.8rem; margin-bottom: 1rem; border: 2px solid #cbd5e1; border-radius: 6px; }
+.btn { background: var(--primary); color: white; padding: 0.8rem 1.5rem; border: none; border-radius: 6px; cursor: pointer; font-weight:600; }
+#successMsg { color: var(--success); margin-top:1rem; display:none; font-weight:600; }
+
+footer { background: var(--dark); color: #cbd5e1; text-align: center; padding: 2rem; margin-top: 3rem; }
+
+@media (max-width: 768px) {
+ .nav-links { display: none; flex-direction: column; position: absolute; top: 60px; left: 0; width: 100%; background: var(--dark); padding: 1rem 0; }
+ .nav-links.show { display: flex; }
+ .menu-toggle { display: block; }
+ .stats { grid-template-columns: 1fr; }
+ .table-controls { flex-direction: column; }
+}
+</style>
+</head>
+<body>
+
+<!-- 1. LOGIN PAGE [Task #1] -->
+<section id="loginPage">
+  <div class="login-box">
+    <h2>CODIORA Portal Login</h2>
+    <form onsubmit="return loginUser(event)">
+      <input type="text" id="username" placeholder="Username *" required>
+      <input type="password" id="password" placeholder="Password *" required>
+      <p class="error" id="loginError">Invalid Username or Password</p>
+      <button class="btn" style="width:100%;">Login</button>
+      <p style="text-align:center; margin-top:1rem; font-size:0.9rem; color:#64748b;">Demo: Admin / 1234</p>
+    </form>
+  </div>
+</section>
+
+<!-- 2. MAIN APP -->
+<div id="app">
+<nav class="navbar">
+  <div class="logo">CODIORA Portal</div>
+  <ul class="nav-links" id="navLinks">
+    <li><a onclick="openPage('home', event)" class="active">Home</a></li>
+    <li><a onclick="openPage('about', event)">About</a></li>
+    <li><a onclick="openPage('dashboard', event)">Dashboard</a></li>
+    <li><a onclick="openPage('add', event)">Add Student</a></li>
+    <li><a onclick="openPage('report', event)">Report</a></li>
+    <li><a onclick="openPage('contact', event)">Contact</a></li>
+    <li><a onclick="logout()" class="btn-logout">Logout</a></li>
+  </ul>
+  <div class="menu-toggle" onclick="menuOpen()">☰</div>
+</nav>
+
+<!-- Home -->
+<section id="home" class="page active">
+  <h2>Home Page - Analytics</h2>
+  <div class="stats" id="homeStats">
+    <div class="card"><h3>Total Students</h3><p id="totalStudents">0</p></div>
+    <div class="card"><h3>Average Score</h3><p id="avgScore">0%</p></div>
+    <div class="card"><h3>Pass Rate</h3><p id="passRate">0%</p></div>
+    <div class="card"><h3>Top Subject</h3><p id="topSubject">-</p></div>
+  </div>
+</section>
+
+<!-- About -->
+<section id="about" class="page">
+  <h2>About Us</h2>
+  <p style="margin:1rem 0;">Ye portal maine CODIORA internship Week 2 ke liye banaya hai</p>
+  <div class="stats">
+    <div class="card"><h3>Mission</h3><p>Better Edu</p></div>
+    <div class="card"><h3>Vision</h3><p>Data Driven</p></div>
+    <div class="card"><h3>Tech</h3><p>HTML CSS JS</p></div>
+    <div class="card"><h3>Status</h3><p>Completed</p></div>
+  </div>
+</section>
+
+<!-- Dashboard - Search + Filter [Task #5] -->
+<section id="dashboard" class="page">
+  <h2>Student Dashboard</h2>
+  <div class="stats">
+    <div class="card"><h3>Tests Done</h3><p id="testsDone">0</p></div>
+    <div class="card"><h3>Highest</h3><p id="highestScore">0%</p></div>
+    <div class="card"><h3>Lowest</h3><p id="lowestScore">0%</p></div>
+    <div class="card"><h3>Attendance</h3><p>91%</p></div>
+  </div>
+
+  <h3 style="margin-top:2rem;">Student Records Table</h3>
+  <div class="table-controls">
+    <input type="text" id="searchInput" placeholder="Search by Name..." onkeyup="filterTable()">
+    <select id="filterSubject" onchange="filterTable()">
+      <option value="">All Subjects</option>
+      <option>Math</option><option>Science</option><option>English</option><option>Physics</option>
+    </select>
+    <select id="sortScore" onchange="sortTable()">
+      <option value="">Sort by Score</option>
+      <option value="asc">Low to High</option>
+      <option value="desc">High to Low</option>
+    </select>
+  </div>
+  <div class="table-wrapper">
+    <table id="studentTable">
+      <thead><tr><th onclick="sortByColumn(0)">ID</th><th onclick="sortByColumn(1)">Name</th><th>Subject</th><th>Score</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>001</td><td>Ali Khan</td><td>Math</td><td>88</td><td class="status-pass">Pass</td></tr>
+        <tr><td>002</td><td>Sara Ahmed</td><td>Science</td><td>92</td><td class="status-pass">Pass</td></tr>
+        <tr><td>003</td><td>Usman Malik</td><td>English</td><td>67</td><td class="status-pass">Pass</td></tr>
+        <tr><td>004</td><td>Ayesha</td><td>Math</td><td>45</td><td class="status-fail">Fail</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="add" class="page">
+  <h2>Add Student Data</h2>
+  <div class="stats">
+    <div class="card"><h3>Add New</h3><p>+</p></div>
+    <div class="card"><h3>Total</h3><p id="totalCard">0</p></div>
+    <div class="card"><h3>Updated</h3><p>Today</p></div>
+    <div class="card"><h3>Check</h3><p>OK</p></div>
+  </div>
+  <div class="form-box">
+    <form onsubmit="return addStu(event)"> 
+      <input type="text" id="sname" placeholder="Student Name *" required minlength="3">
+      <input type="text" id="sid" placeholder="Student ID *" required pattern="00[0-9]+">
+      <select id="ssub" required>
+        <option value="">Select Subject *</option>
+        <option>Math</option><option>Science</option><option>English</option><option>Physics</option>
+      </select>
+      <input type="number" id="sscore" placeholder="Score % *" min="0" max="100" required>
+      <button class="btn">Add Record</button>
+    </form>
+    <p id="successMsg">✓ Student record added successfully!</p>
+  </div>
+</section>
+
+<section id="report" class="page">
+  <h2>Performance Report</h2>
+  <div class="stats">
+    <div class="card"><h3>Math Avg</h3><p>85%</p></div>
+    <div class="card"><h3>Science Avg</h3><p>78%</p></div>
+    <div class="card"><h3>English Avg</h3><p>80%</p></div>
+    <div class="card"><h3>Computer Avg</h3><p>90%</p></div>
+  </div>
+</section>
+
+<section id="contact" class="page">
+  <h2>Contact Us</h2>
+  <div class="stats">
+    <div class="card"><h3>Support</h3><p>24/7 Help</p></div>
+    <div class="card"><h3>Feedback</h3><p>We Listen</p></div>
+    <div class="card"><h3>Privacy</h3><p>Secure</p></div>
+    <div class="card"><h3>Response</h3><p>Quick</p></div>
+  </div>
+</section>
+
+<footer>
+  <p>CODIORA | Our Code Builds Your Vision</p>
+  <p>Internship Task 2026 | Made by: [Apna Naam Likho]</p>
+</footer>
+</div>
+
+<script>
+
+let studentsData = [
+  {id: "001", name: "Ali Khan", subject: "Math", score: 88},
+  {id: "002", name: "Sara Ahmed", subject: "Science", score: 92},
+  {id: "003", name: "Usman Malik", subject: "English", score: 67},
+  {id: "004", name: "Ayesha", subject: "Math", score: 45}
+];
+
+
+function loginUser(e){
+  e.preventDefault();
+  let user = document.getElementById('username').value;
+  let pass = document.getElementById('password').value;
+
+  if(user === "Admin" && pass === "1234"){
+    document.getElementById('loginPage').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    updateAllStats(); 
+  } else {
+    document.getElementById('loginError').style.display = 'block';
+  }
+  return false;
+}
+
+function logout(){
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('loginPage').style.display = 'flex';
+  document.getElementById('username').value = '';
+  document.getElementById('password').value = '';
+}
+
+function openPage(id, event){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.nav-links a').forEach(a=>a.classList.remove('active'));
+  event.target.classList.add('active');
+  window.scrollTo(0,0);
+  document.getElementById('navLinks').classList.remove('show');
+  if(id === 'home' || id === 'dashboard') updateAllStats(); // Wapis aao to stats refresh
+}
+
+function menuOpen(){
+  document.getElementById('navLinks').classList.toggle('show');
+}
+
+
+function updateAllStats(){
+  let total = studentsData.length;
+  let passCount = studentsData.filter(s => s.score >= 50).length;
+  let avg = total > 0? Math.round(studentsData.reduce((a,b) => a + b.score, 0) / total) : 0;
+  let scores = studentsData.map(s => s.score);
+  let highest = Math.max(...scores, 0);
+  let lowest = Math.min(...scores, 100);
+
+  let subjCount = {};
+  studentsData.forEach(s => subjCount[s.subject] = (subjCount[s.subject]||0)+1);
+  let topSubj = Object.keys(subjCount).reduce((a,b) => subjCount[a] > subjCount[b]? a : b, "-");
+
+  document.getElementById('totalStudents').innerText = total;
+  document.getElementById('avgScore').innerText = avg + '%';
+  document.getElementById('passRate').innerText = total > 0? Math.round((passCount/total)*100) + '%' : '0%';
+  document.getElementById('topSubject').innerText = topSubj;
+
+
+  document.getElementById('testsDone').innerText = total;
+  document.getElementById('highestScore').innerText = highest + '%';
+  document.getElementById('lowestScore').innerText = lowest + '%';
+  document.getElementById('totalCard').innerText = total;
+}
+
+function addStu(e){
+  e.preventDefault();
+
+  let name = document.getElementById('sname').value.trim();
+  let id = document.getElementById('sid').value.trim();
+  let subject = document.getElementById('ssub').value;
+  let score = parseInt(document.getElementById('sscore').value);
+
+
+  if(name.length < 3){ alert("Name must be 3+ characters"); return false; }
+  if(studentsData.some(s => s.id === id)){ alert("Student ID already exists"); return false; }
+  if(score < 0 || score > 100){ alert("Score must be 0-100"); return false; }
+
+  studentsData.push({id, name, subject, score});
+
+  renderTable();
+
+  document.getElementById('successMsg').style.display = 'block';
+  setTimeout(()=>{ document.getElementById('successMsg').style.display = 'none'; }, 3000);
+  e.target.reset();
+  return false;
+}
+
+function renderTable(){
+  let tbody = document.querySelector('#studentTable tbody');
+  tbody.innerHTML = '';
+  studentsData.forEach(s => {
+    let status = s.score >= 50? 'Pass' : 'Fail';
+    let statusClass = s.score >= 50? 'status-pass' : 'status-fail';
+    tbody.innerHTML += `<tr><td>${s.id}</td><td>${s.name}</td><td>${s.subject}</td><td>${s.score}</td><td class="${statusClass}">${status}</td></tr>`;
+  });
+}
+
+function filterTable(){
+  let search = document.getElementById('searchInput').value.toLowerCase();
+  let subject = document.getElementById('filterSubject').value;
+
+  let filtered = studentsData.filter(s =>
+    s.name.toLowerCase().includes(search) &&
+    (subject === "" || s.subject === subject)
+  );
+  renderFilteredTable(filtered);
+}
+
+function sortTable(){
+  let order = document.getElementById('sortScore').value;
+  if(order === "asc") studentsData.sort((a,b) => a.score - b.score);
+  if(order === "desc") studentsData.sort((a,b) => b.score - a.score);
+  renderTable();
+}
+
+function sortByColumn(colIndex){
+  studentsData.sort((a,b) => {
+    let valA = colIndex === 0? a.id : a.name.toLowerCase();
+    let valB = colIndex === 0? b.id : b.name.toLowerCase();
+    return valA > valB? 1 : -1;
+  });
+  renderTable();
+}
+
+function renderFilteredTable(data){
+  let tbody = document.querySelector('#studentTable tbody');
+  tbody.innerHTML = '';
+  data.forEach(s => {
+    let status = s.score >= 50? 'Pass' : 'Fail';
+    let statusClass = s.score >= 50? 'status-pass' : 'status-fail';
+    tbody.innerHTML += `<tr><td>${s.id}</td><td>${s.name}</td><td>${s.subject}</td><td>${s.score}</td><td class="${statusClass}">${status}</td></tr>`;
+  });
+}
+</script>
+</body>
+</html>
