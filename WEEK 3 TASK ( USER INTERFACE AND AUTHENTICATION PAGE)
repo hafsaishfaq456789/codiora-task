@@ -1,0 +1,670 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Portal - CODIORA</title>
+<style>
+:root {
+  --primary: #4f46e5;
+  --primary-dark: #3730a3;
+  --dark: #1e293b;
+  --success: #16a34a;
+  --danger: #dc2626;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+body { background: #f1f5f9; }
+
+.auth-page { display: none; justify-content: center; align-items: center; min-height: 100vh; padding: 2rem 1rem; }
+.auth-page.active { display: flex; }
+.login-box { background: white; padding: 2.5rem; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 400px; animation: fadeInUp 0.4s ease; }
+.login-box h2 { text-align: center; margin-bottom: 0.5rem; color: var(--dark); }
+.login-box .subtitle { text-align: center; color: #64748b; font-size: 0.85rem; margin-bottom: 1.5rem; }
+.login-box input { width: 100%; padding: 0.8rem; margin-bottom: 1rem; border: 2px solid #cbd5e1; border-radius: 6px; transition: border-color 0.2s; }
+.login-box input:focus { outline: none; border-color: var(--primary); }
+.error { color: var(--danger); font-size: 0.9rem; margin-top: -0.5rem; margin-bottom: 1rem; display: none; }
+.success-text { color: var(--success); font-size: 0.9rem; margin-top: -0.5rem; margin-bottom: 1rem; display: none; }
+.auth-links { display: flex; justify-content: space-between; margin-top: 1rem; font-size: 0.85rem; }
+.auth-links a { color: var(--primary); text-decoration: none; cursor: pointer; }
+.auth-links a:hover { text-decoration: underline; }
+
+#app { display: none; }
+
+.navbar {
+  background: var(--dark); color: white; display: flex; justify-content: space-between;
+  align-items: center; padding: 1rem 5%; position: sticky; top: 0; z-index: 10;
+}
+.logo { font-weight: bold; color: #a5b4fc; font-size:1.2rem }
+.nav-links { display: flex; list-style: none; gap: 1.5rem; align-items: center; }
+.nav-links a { color: white; text-decoration: none; cursor: pointer; padding: 0.5rem; border-radius: 6px; transition: background 0.2s; }
+.nav-links a:hover { background: rgba(255,255,255,0.1); }
+.nav-links a.active { background: var(--primary); border-radius:6px; }
+.btn-logout { background: var(--danger); padding: 0.5rem 1rem; border-radius: 6px; }
+.btn-logout:hover { background: #b91c1c !important; }
+.menu-toggle { display: none; font-size: 1.8rem; cursor: pointer; }
+.welcome-user { color: #a5b4fc; font-size: 0.85rem; margin-right: 0.5rem; }
+
+.page { display: none; padding: 3rem 5%; min-height: 70vh; }
+.page.active { display: block; animation: fadeInUp 0.35s ease; }
+h2 { border-left:4px solid var(--primary); padding-left:10px; margin-bottom:1rem; }
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes popIn {
+  from { opacity: 0; transform: scale(0.92); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; margin: 2rem 0; }
+.card { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: center; border-top: 4px solid var(--primary); transition: transform 0.2s, box-shadow 0.2s; animation: popIn 0.35s ease backwards; }
+.card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.12); }
+.card h3 { color: #64748b; font-size: 0.9rem; }
+.card p { font-size: 2rem; font-weight: bold; margin-top:0.5rem; }
+
+.table-controls { display: flex; gap: 1rem; margin: 1.5rem 0; flex-wrap: wrap; }
+.table-controls input,.table-controls select { padding: 0.7rem; border: 2px solid #cbd5e1; border-radius: 6px; }
+.table-controls input:focus,.table-controls select:focus { outline: none; border-color: var(--primary); }
+.table-wrapper { overflow-x: auto; margin-top:1rem; }
+table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; }
+th, td { padding: 1rem; text-align: left; border-bottom: 1px solid #e2e8f0; }
+th { background: var(--primary); color: white; cursor: pointer; user-select: none; }
+th:hover { background: #3730a3; }
+tbody tr { cursor: pointer; transition: background 0.15s; }
+tbody tr:hover { background: #eef2ff; }
+.status-pass { color: var(--success); font-weight: 600; }
+.status-fail { color: var(--danger); font-weight: 600; }
+.no-results { text-align: center; padding: 2rem; color: #94a3b8; }
+
+.form-box { background: white; padding: 2rem; border-radius: 12px; max-width: 600px; margin:2rem auto; }
+.form-box input,.form-box select { width: 100%; padding: 0.8rem; margin-bottom: 1rem; border: 2px solid #cbd5e1; border-radius: 6px; transition: border-color 0.2s; }
+.form-box input:focus,.form-box select:focus { outline: none; border-color: var(--primary); }
+.btn { background: var(--primary); color: white; padding: 0.8rem 1.5rem; border: none; border-radius: 6px; cursor: pointer; font-weight:600; transition: background 0.2s, transform 0.1s; }
+.btn:hover { background: var(--primary-dark); }
+.btn:active { transform: scale(0.98); }
+.btn-outline { background: white; color: var(--primary); border: 2px solid var(--primary); padding: 0.7rem 1.4rem; border-radius: 6px; cursor: pointer; font-weight: 600; }
+.btn-outline:hover { background: #eef2ff; }
+#successMsg { color: var(--success); margin-top:1rem; display:none; font-weight:600; }
+
+.perf-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1.2rem; margin-top: 1.5rem; }
+.perf-card { background: white; border-radius: 12px; padding: 1.3rem; box-shadow: 0 4px 6px rgba(0,0,0,0.08); cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; animation: popIn 0.35s ease backwards; border-left: 5px solid var(--primary); }
+.perf-card:hover { transform: translateY(-4px); box-shadow: 0 12px 20px rgba(0,0,0,0.12); }
+.perf-card .pname { font-weight: 700; color: var(--dark); font-size: 1.05rem; }
+.perf-card .psub { color: #64748b; font-size: 0.8rem; margin: 0.2rem 0 0.8rem; }
+.perf-bar-track { background: #e2e8f0; border-radius: 20px; height: 10px; overflow: hidden; }
+.perf-bar-fill { height: 100%; border-radius: 20px; width: 0%; transition: width 0.8s ease; }
+.perf-score-row { display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem; font-size: 0.85rem; }
+
+
+.profile-card { background: white; border-radius: 16px; max-width: 520px; margin: 2rem auto; padding: 2.5rem; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.1); animation: popIn 0.4s ease; }
+.profile-avatar { width: 90px; height: 90px; border-radius: 50%; background: var(--primary); color: white; font-size: 2rem; font-weight: 700; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; }
+.profile-card h3 { font-size: 1.4rem; color: var(--dark); }
+.profile-card .pid { color: #64748b; font-size: 0.9rem; margin-bottom: 1.5rem; }
+.profile-detail-row { display: flex; justify-content: space-between; padding: 0.7rem 0; border-bottom: 1px solid #e2e8f0; text-align: left; }
+.profile-detail-row span:first-child { color: #64748b; }
+.profile-detail-row span:last-child { font-weight: 600; color: var(--dark); }
+.profile-bar-wrap { margin: 1.5rem 0; }
+.profile-status-badge { display: inline-block; padding: 0.4rem 1rem; border-radius: 20px; font-weight: 700; margin-top: 1rem; }
+.badge-pass { background: #dcfce7; color: var(--success); }
+.badge-fail { background: #fee2e2; color: var(--danger); }
+.empty-state { text-align: center; padding: 3rem; color: #94a3b8; }
+
+footer { background: var(--dark); color: #cbd5e1; text-align: center; padding: 2rem; margin-top: 3rem; }
+
+@media (max-width: 768px) {
+ .nav-links { display: none; flex-direction: column; position: absolute; top: 60px; left: 0; width: 100%; background: var(--dark); padding: 1rem 0; }
+ .nav-links.show { display: flex; }
+ .menu-toggle { display: block; }
+ .stats { grid-template-columns: 1fr; }
+ .table-controls { flex-direction: column; }
+ .perf-grid { grid-template-columns: 1fr 1fr; }
+ .welcome-user { display: none; }
+}
+@media (max-width: 480px) {
+ .perf-grid { grid-template-columns: 1fr; }
+ .profile-card { padding: 1.5rem; }
+}
+</style>
+</head>
+<body>
+
+
+<section id="loginPage" class="auth-page active">
+  <div class="login-box">
+    <h2>CODIORA Portal Login</h2>
+    <p class="subtitle">Sign in to continue</p>
+    <form onsubmit="return loginUser(event)">
+      <input type="text" id="username" placeholder="Username *" required>
+      <input type="password" id="password" placeholder="Password *" required>
+      <p class="error" id="loginError">Invalid Username or Password</p>
+      <button class="btn" style="width:100%;">Login</button>
+      <p style="text-align:center; margin-top:1rem; font-size:0.85rem; color:#64748b;">Demo: Admin / 1234</p>
+      <div class="auth-links">
+        <a onclick="showAuthPage('registerPage')">Create account</a>
+        <a onclick="showAuthPage('forgotPage')">Forgot password?</a>
+      </div>
+    </form>
+  </div>
+</section>
+
+<section id="registerPage" class="auth-page">
+  <div class="login-box">
+    <h2>Create Account</h2>
+    <p class="subtitle">Register a new CODIORA account</p>
+    <form onsubmit="return registerUser(event)">
+      <input type="text" id="regUsername" placeholder="Choose Username *" required minlength="3">
+      <input type="email" id="regEmail" placeholder="Email *" required>
+      <input type="password" id="regPassword" placeholder="Password (min 4 chars) *" required minlength="4">
+      <input type="password" id="regConfirm" placeholder="Confirm Password *" required>
+      <p class="error" id="registerError"></p>
+      <button class="btn" style="width:100%;">Register</button>
+      <div class="auth-links">
+        <a onclick="showAuthPage('loginPage')">&larr; Back to Login</a>
+      </div>
+    </form>
+  </div>
+</section>
+
+<section id="forgotPage" class="auth-page">
+  <div class="login-box">
+    <h2>Forgot Password</h2>
+    <p class="subtitle">Enter your username to reset your password (simulated)</p>
+    <form onsubmit="return sendResetCode(event)">
+      <input type="text" id="forgotUsername" placeholder="Username *" required>
+      <p class="error" id="forgotError"></p>
+      <button class="btn" style="width:100%;">Send Reset Code</button>
+      <div class="auth-links">
+        <a onclick="showAuthPage('loginPage')">&larr; Back to Login</a>
+      </div>
+    </form>
+  </div>
+</section>
+
+
+<section id="resetPage" class="auth-page">
+  <div class="login-box">
+    <h2>Reset Password</h2>
+    <p class="subtitle" id="resetSubtitle">Enter a new password for your account</p>
+    <form onsubmit="return resetPassword(event)">
+      <input type="text" id="resetUsername" placeholder="Username" readonly>
+      <input type="password" id="resetNewPassword" placeholder="New Password *" required minlength="4">
+      <input type="password" id="resetConfirmPassword" placeholder="Confirm New Password *" required>
+      <p class="error" id="resetError"></p>
+      <button class="btn" style="width:100%;">Update Password</button>
+      <div class="auth-links">
+        <a onclick="showAuthPage('loginPage')">&larr; Back to Login</a>
+      </div>
+    </form>
+  </div>
+</section>
+
+<div id="app">
+<nav class="navbar">
+  <div class="logo">CODIORA Portal</div>
+  <ul class="nav-links" id="navLinks">
+    <li class="welcome-user" id="welcomeUser"></li>
+    <li><a onclick="openPage('home', event)" class="active">Home</a></li>
+    <li><a onclick="openPage('about', event)">About</a></li>
+    <li><a onclick="openPage('dashboard', event)">Dashboard</a></li>
+    <li><a onclick="openPage('add', event)">Add Student</a></li>
+    <li><a onclick="openPage('report', event)">Report</a></li>
+    <li><a onclick="openPage('contact', event)">Contact</a></li>
+    <li><a onclick="logout()" class="btn-logout">Logout</a></li>
+  </ul>
+  <div class="menu-toggle" onclick="menuOpen()">☰</div>
+</nav>
+
+<section id="home" class="page active">
+  <h2>Home Page - Analytics</h2>
+  <div class="stats" id="homeStats">
+    <div class="card"><h3>Total Students</h3><p id="totalStudents">0</p></div>
+    <div class="card"><h3>Average Score</h3><p id="avgScore">0%</p></div>
+    <div class="card"><h3>Pass Rate</h3><p id="passRate">0%</p></div>
+    <div class="card"><h3>Top Subject</h3><p id="topSubject">-</p></div>
+  </div>
+
+  <h3 style="margin-top:2.5rem;">Student Performance Cards</h3>
+  <div class="perf-grid" id="perfGridHome"></div>
+</section>
+
+
+<section id="about" class="page">
+  <h2>About Us</h2>
+  <p style="margin:1rem 0;">Ye portal maine CODIORA internship Week 2 ke liye banaya hai</p>
+  <div class="stats">
+    <div class="card"><h3>Mission</h3><p>Better Edu</p></div>
+    <div class="card"><h3>Vision</h3><p>Data Driven</p></div>
+    <div class="card"><h3>Tech</h3><p>HTML CSS JS</p></div>
+    <div class="card"><h3>Status</h3><p>Completed</p></div>
+  </div>
+</section>
+
+<section id="dashboard" class="page">
+  <h2>Student Dashboard</h2>
+  <div class="stats">
+    <div class="card"><h3>Tests Done</h3><p id="testsDone">0</p></div>
+    <div class="card"><h3>Highest</h3><p id="highestScore">0%</p></div>
+    <div class="card"><h3>Lowest</h3><p id="lowestScore">0%</p></div>
+    <div class="card"><h3>Attendance</h3><p>91%</p></div>
+  </div>
+
+  <h3 style="margin-top:2rem;">Student Records Table</h3>
+  <div class="table-controls">
+    <input type="text" id="searchInput" placeholder="Search by Name, ID..." onkeyup="filterTable()">
+    <select id="filterSubject" onchange="filterTable()">
+      <option value="">All Subjects</option>
+      <option>Math</option><option>Science</option><option>English</option><option>Physics</option>
+    </select>
+    <select id="filterStatus" onchange="filterTable()">
+      <option value="">All Status</option>
+      <option value="pass">Pass Only</option>
+      <option value="fail">Fail Only</option>
+    </select>
+    <select id="sortScore" onchange="sortTable()">
+      <option value="">Sort by Score</option>
+      <option value="asc">Low to High</option>
+      <option value="desc">High to Low</option>
+    </select>
+  </div>
+  <p style="font-size:0.8rem; color:#94a3b8; margin-top:-0.5rem;">Tip: click any row to view that student's profile</p>
+  <div class="table-wrapper">
+    <table id="studentTable">
+      <thead><tr><th onclick="sortByColumn(0)">ID</th><th onclick="sortByColumn(1)">Name</th><th>Subject</th><th>Score</th><th>Status</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <h3 style="margin-top:2.5rem;">Performance Cards</h3>
+  <div class="perf-grid" id="perfGridDashboard"></div>
+</section>
+
+<section id="add" class="page">
+  <h2>Add Student Data</h2>
+  <div class="stats">
+    <div class="card"><h3>Add New</h3><p>+</p></div>
+    <div class="card"><h3>Total</h3><p id="totalCard">0</p></div>
+    <div class="card"><h3>Updated</h3><p>Today</p></div>
+    <div class="card"><h3>Check</h3><p>OK</p></div>
+  </div>
+  <div class="form-box">
+    <form onsubmit="return addStu(event)"> 
+      <input type="text" id="sname" placeholder="Student Name *" required minlength="3">
+      <input type="text" id="sid" placeholder="Student ID *" required pattern="00[0-9]+">
+      <select id="ssub" required>
+        <option value="">Select Subject *</option>
+        <option>Math</option><option>Science</option><option>English</option><option>Physics</option>
+      </select>
+      <input type="number" id="sscore" placeholder="Score % *" min="0" max="100" required>
+      <button class="btn">Add Record</button>
+    </form>
+    <p id="successMsg">✓ Student record added successfully!</p>
+  </div>
+</section>
+
+<section id="report" class="page">
+  <h2>Performance Report</h2>
+  <div class="stats">
+    <div class="card"><h3>Math Avg</h3><p>85%</p></div>
+    <div class="card"><h3>Science Avg</h3><p>78%</p></div>
+    <div class="card"><h3>English Avg</h3><p>80%</p></div>
+    <div class="card"><h3>Computer Avg</h3><p>90%</p></div>
+  </div>
+</section>
+
+<section id="profile" class="page">
+  <h2>Student Profile</h2>
+  <div id="profileContent">
+    <div class="empty-state">Select a student from the Dashboard to view their profile.</div>
+  </div>
+</section>
+
+<section id="contact" class="page">
+  <h2>Contact Us</h2>
+  <div class="stats">
+    <div class="card"><h3>Support</h3><p>24/7 Help</p></div>
+    <div class="card"><h3>Feedback</h3><p>We Listen</p></div>
+    <div class="card"><h3>Privacy</h3><p>Secure</p></div>
+    <div class="card"><h3>Response</h3><p>Quick</p></div>
+  </div>
+</section>
+
+<footer>
+  <p>CODIORA | Our Code Builds Your Vision</p>
+  <p>Internship Task 2026 | Made by: [Apna Naam Likho]</p>
+</footer>
+</div>
+
+<script>
+const STUDENTS_KEY = 'codiora_students';
+const USERS_KEY = 'codiora_users';
+const SESSION_KEY = 'codiora_currentUser';
+
+let studentsData = [];
+let users = [];
+let currentUser = null;
+let resetTargetUser = null;
+
+function loadData(){
+  let storedStudents = localStorage.getItem(STUDENTS_KEY);
+  if(storedStudents){
+    studentsData = JSON.parse(storedStudents);
+  } else {
+    studentsData = [
+      {id: "001", name: "Ali Khan", subject: "Math", score: 88},
+      {id: "002", name: "Sara Ahmed", subject: "Science", score: 92},
+      {id: "003", name: "Usman Malik", subject: "English", score: 67},
+      {id: "004", name: "Ayesha", subject: "Math", score: 45}
+    ];
+    saveStudents();
+  }
+
+  let storedUsers = localStorage.getItem(USERS_KEY);
+  if(storedUsers){
+    users = JSON.parse(storedUsers);
+  } else {
+    users = [ {username: "Admin", email: "admin@codiora.com", password: "1234"} ];
+    saveUsers();
+  }
+}
+
+function saveStudents(){ localStorage.setItem(STUDENTS_KEY, JSON.stringify(studentsData)); }
+function saveUsers(){ localStorage.setItem(USERS_KEY, JSON.stringify(users)); }
+
+function showAuthPage(id){
+  document.querySelectorAll('.auth-page').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+ 
+  document.querySelectorAll('.auth-page .error').forEach(e => { e.style.display = 'none'; e.innerText = ''; });
+}
+
+function loginUser(e){
+  e.preventDefault();
+  let user = document.getElementById('username').value.trim();
+  let pass = document.getElementById('password').value;
+  let found = users.find(u => u.username === user && u.password === pass);
+
+  if(found){
+    currentUser = found.username;
+    sessionStorage.setItem(SESSION_KEY, currentUser);
+    document.getElementById('loginError').style.display = 'none';
+    document.getElementById('loginPage').classList.remove('active');
+    document.getElementById('app').style.display = 'block';
+    document.getElementById('welcomeUser').innerText = 'Hi, ' + currentUser;
+    renderTable();
+    updateAllStats();
+  } else {
+    document.getElementById('loginError').style.display = 'block';
+  }
+  return false;
+}
+
+function registerUser(e){
+  e.preventDefault();
+  let uname = document.getElementById('regUsername').value.trim();
+  let email = document.getElementById('regEmail').value.trim();
+  let pass = document.getElementById('regPassword').value;
+  let confirm = document.getElementById('regConfirm').value;
+  let errEl = document.getElementById('registerError');
+
+  if(users.some(u => u.username.toLowerCase() === uname.toLowerCase())){
+    errEl.innerText = 'Username already taken'; errEl.style.display = 'block'; return false;
+  }
+  if(pass !== confirm){
+    errEl.innerText = 'Passwords do not match'; errEl.style.display = 'block'; return false;
+  }
+
+  users.push({username: uname, email, password: pass});
+  saveUsers();
+  errEl.style.display = 'none';
+  e.target.reset();
+  alert('Account created! You can now log in.');
+  showAuthPage('loginPage');
+  return false;
+}
+
+function sendResetCode(e){
+  e.preventDefault();
+  let uname = document.getElementById('forgotUsername').value.trim();
+  let errEl = document.getElementById('forgotError');
+  let found = users.find(u => u.username.toLowerCase() === uname.toLowerCase());
+
+  if(!found){
+    errEl.innerText = 'No account found with that username'; errEl.style.display = 'block'; return false;
+  }
+
+  errEl.style.display = 'none';
+  resetTargetUser = found.username;
+  document.getElementById('resetUsername').value = found.username;
+  document.getElementById('resetSubtitle').innerText = 'Reset code "sent" (simulated) — set your new password below';
+  showAuthPage('resetPage');
+  return false;
+}
+
+function resetPassword(e){
+  e.preventDefault();
+  let newPass = document.getElementById('resetNewPassword').value;
+  let confirmPass = document.getElementById('resetConfirmPassword').value;
+  let errEl = document.getElementById('resetError');
+
+  if(newPass !== confirmPass){
+    errEl.innerText = 'Passwords do not match'; errEl.style.display = 'block'; return false;
+  }
+
+  let user = users.find(u => u.username === resetTargetUser);
+  if(user){
+    user.password = newPass;
+    saveUsers();
+    errEl.style.display = 'none';
+    alert('Password updated! Please log in with your new password.');
+    e.target.reset();
+    showAuthPage('loginPage');
+  }
+  return false;
+}
+
+function logout(){
+  currentUser = null;
+  sessionStorage.removeItem(SESSION_KEY);
+  document.getElementById('app').style.display = 'none';
+  showAuthPage('loginPage');
+  document.getElementById('username').value = '';
+  document.getElementById('password').value = '';
+}
+
+function openPage(id, event){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.nav-links a').forEach(a=>a.classList.remove('active'));
+  if(event && event.target) event.target.classList.add('active');
+  window.scrollTo(0,0);
+  document.getElementById('navLinks').classList.remove('show');
+  if(id === 'home' || id === 'dashboard'){
+    updateAllStats();
+    renderTable();
+  }
+}
+
+function menuOpen(){
+  document.getElementById('navLinks').classList.toggle('show');
+}
+
+function scoreColor(score){
+  if(score >= 80) return '#16a34a';
+  if(score >= 50) return '#4f46e5';
+  return '#dc2626';
+}
+
+function renderPerformanceCards(containerId, data){
+  let container = document.getElementById(containerId);
+  if(!container) return;
+  container.innerHTML = '';
+  data.forEach((s, i) => {
+    let color = scoreColor(s.score);
+    let card = document.createElement('div');
+    card.className = 'perf-card';
+    card.style.animationDelay = (i * 0.05) + 's';
+    card.style.borderLeftColor = color;
+    card.onclick = () => viewProfile(s.id);
+    card.innerHTML = `
+      <div class="pname">${s.name}</div>
+      <div class="psub">${s.subject} &bull; ID ${s.id}</div>
+      <div class="perf-bar-track"><div class="perf-bar-fill" style="background:${color};" data-target="${s.score}"></div></div>
+      <div class="perf-score-row"><span>Score</span><strong style="color:${color}">${s.score}%</strong></div>
+    `;
+    container.appendChild(card);
+  });
+ 
+  requestAnimationFrame(() => {
+    container.querySelectorAll('.perf-bar-fill').forEach(bar => {
+      let target = bar.getAttribute('data-target');
+      setTimeout(()=>{ bar.style.width = target + '%'; }, 30);
+    });
+  });
+}
+
+function updateAllStats(){
+  let total = studentsData.length;
+  let passCount = studentsData.filter(s => s.score >= 50).length;
+  let avg = total > 0? Math.round(studentsData.reduce((a,b) => a + b.score, 0) / total) : 0;
+  let scores = studentsData.map(s => s.score);
+  let highest = total > 0? Math.max(...scores) : 0;
+  let lowest = total > 0? Math.min(...scores) : 0;
+
+  let subjCount = {};
+  studentsData.forEach(s => subjCount[s.subject] = (subjCount[s.subject]||0)+1);
+  let topSubj = Object.keys(subjCount).length ? Object.keys(subjCount).reduce((a,b) => subjCount[a] > subjCount[b]? a : b) : "-";
+
+  document.getElementById('totalStudents').innerText = total;
+  document.getElementById('avgScore').innerText = avg + '%';
+  document.getElementById('passRate').innerText = total > 0? Math.round((passCount/total)*100) + '%' : '0%';
+  document.getElementById('topSubject').innerText = topSubj;
+
+  document.getElementById('testsDone').innerText = total;
+  document.getElementById('highestScore').innerText = highest + '%';
+  document.getElementById('lowestScore').innerText = lowest + '%';
+  document.getElementById('totalCard').innerText = total;
+
+  renderPerformanceCards('perfGridHome', studentsData);
+  renderPerformanceCards('perfGridDashboard', studentsData);
+}
+
+function addStu(e){
+  e.preventDefault();
+
+  let name = document.getElementById('sname').value.trim();
+  let id = document.getElementById('sid').value.trim();
+  let subject = document.getElementById('ssub').value;
+  let score = parseInt(document.getElementById('sscore').value);
+
+  if(name.length < 3){ alert("Name must be 3+ characters"); return false; }
+  if(studentsData.some(s => s.id === id)){ alert("Student ID already exists"); return false; }
+  if(score < 0 || score > 100){ alert("Score must be 0-100"); return false; }
+
+  studentsData.push({id, name, subject, score});
+  saveStudents();
+
+  renderTable();
+  updateAllStats();
+
+  document.getElementById('successMsg').style.display = 'block';
+  setTimeout(()=>{ document.getElementById('successMsg').style.display = 'none'; }, 3000);
+  e.target.reset();
+  return false;
+}
+
+function renderTable(){
+  renderFilteredTable(studentsData);
+}
+
+function rowHTML(s){
+  let status = s.score >= 50? 'Pass' : 'Fail';
+  let statusClass = s.score >= 50? 'status-pass' : 'status-fail';
+  return `<tr onclick="viewProfile('${s.id}')"><td>${s.id}</td><td>${s.name}</td><td>${s.subject}</td><td>${s.score}</td><td class="${statusClass}">${status}</td></tr>`;
+}
+
+function renderFilteredTable(data){
+  let tbody = document.querySelector('#studentTable tbody');
+  tbody.innerHTML = '';
+  if(data.length === 0){
+    tbody.innerHTML = '<tr><td colspan="5" class="no-results">No matching students found</td></tr>';
+    return;
+  }
+  data.forEach(s => { tbody.innerHTML += rowHTML(s); });
+}
+
+function filterTable(){
+  let search = document.getElementById('searchInput').value.toLowerCase();
+  let subject = document.getElementById('filterSubject').value;
+  let status = document.getElementById('filterStatus').value;
+
+  let filtered = studentsData.filter(s => {
+    let matchesSearch = s.name.toLowerCase().includes(search) || s.id.toLowerCase().includes(search);
+    let matchesSubject = subject === "" || s.subject === subject;
+    let matchesStatus = status === "" || (status === "pass" && s.score >= 50) || (status === "fail" && s.score < 50);
+    return matchesSearch && matchesSubject && matchesStatus;
+  });
+  renderFilteredTable(filtered);
+}
+
+function sortTable(){
+  let order = document.getElementById('sortScore').value;
+  if(order === "asc") studentsData.sort((a,b) => a.score - b.score);
+  if(order === "desc") studentsData.sort((a,b) => b.score - a.score);
+  saveStudents();
+  filterTable();
+}
+
+function sortByColumn(colIndex){
+  studentsData.sort((a,b) => {
+    let valA = colIndex === 0? a.id : a.name.toLowerCase();
+    let valB = colIndex === 0? b.id : b.name.toLowerCase();
+    return valA > valB? 1 : -1;
+  });
+  saveStudents();
+  filterTable();
+}
+
+function viewProfile(id){
+  let s = studentsData.find(st => st.id === id);
+  let container = document.getElementById('profileContent');
+  if(!s){
+    container.innerHTML = '<div class="empty-state">Student not found.</div>';
+  } else {
+    let status = s.score >= 50 ? 'Pass' : 'Fail';
+    let badgeClass = s.score >= 50 ? 'badge-pass' : 'badge-fail';
+    let color = scoreColor(s.score);
+    let initials = s.name.split(' ').map(n => n[0]).join('').substring(0,2).toUpperCase();
+    container.innerHTML = `
+      <div class="profile-card">
+        <div class="profile-avatar">${initials}</div>
+        <h3>${s.name}</h3>
+        <div class="pid">Student ID: ${s.id}</div>
+        <div class="profile-detail-row"><span>Subject</span><span>${s.subject}</span></div>
+        <div class="profile-detail-row"><span>Score</span><span>${s.score}%</span></div>
+        <div class="profile-detail-row"><span>Status</span><span>${status}</span></div>
+        <div class="profile-bar-wrap">
+          <div class="perf-bar-track"><div class="perf-bar-fill" id="profileBar" style="background:${color};"></div></div>
+        </div>
+        <span class="profile-status-badge ${badgeClass}">${status}</span><br>
+        <button class="btn-outline" style="margin-top:1.5rem;" onclick="openPage('dashboard', {target:document.querySelector('.nav-links a')})">&larr; Back to Dashboard</button>
+      </div>
+    `;
+    setTimeout(()=>{
+      let bar = document.getElementById('profileBar');
+      if(bar) bar.style.width = s.score + '%';
+    }, 30);
+  }
+
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('profile').classList.add('active');
+  document.querySelectorAll('.nav-links a').forEach(a=>a.classList.remove('active'));
+  window.scrollTo(0,0);
+  document.getElementById('navLinks').classList.remove('show');
+}
+
+loadData();
+</script>
+</body>
+</html>
