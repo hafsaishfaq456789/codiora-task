@@ -1,0 +1,1055 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Portal - CODIORA</title>
+<style>
+:root {
+  --primary: #4f46e5;
+  --primary-dark: #3730a3;
+  --dark: #1e293b;
+  --success: #16a34a;
+  --danger: #dc2626;
+
+  --role-admin: #dc2626;
+  --role-teacher: #16a34a;
+  --role-student: #4f46e5;
+
+  --bg: #f1f5f9;
+  --surface: #ffffff;
+  --text: #1e293b;
+  --text-muted: #64748b;
+  --border: #e2e8f0;
+  --border-strong: #cbd5e1;
+}
+body.dark {
+  --bg: #0f172a;
+  --surface: #1e293b;
+  --text: #e2e8f0;
+  --text-muted: #94a3b8;
+  --border: #334155;
+  --border-strong: #475569;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+body { background: var(--bg); color: var(--text); transition: background 0.2s ease, color 0.2s ease; }
+
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, [tabindex]:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 2px;
+}
+.skip-link {
+  position: absolute; left: -999px; top: 0; z-index: 999;
+  background: var(--dark); color: #fff; padding: 0.75rem 1.25rem; border-radius: 0 0 6px 0; font-weight: 600;
+}
+.skip-link:focus { left: 0; }
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+}
+
+.auth-page { display: none; justify-content: center; align-items: center; min-height: 100vh; padding: 2rem 1rem; }
+.auth-page.active { display: flex; }
+.login-box { background: var(--surface); padding: 2.5rem; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 400px; animation: fadeInUp 0.4s ease; }
+.login-box h2 { text-align: center; margin-bottom: 0.5rem; color: var(--text); }
+.login-box .subtitle { text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.5rem; }
+.login-box input, .login-box select { width: 100%; padding: 0.8rem; margin-bottom: 1rem; border: 2px solid var(--border-strong); border-radius: 6px; transition: border-color 0.2s; background: var(--surface); color: var(--text); }
+.login-box input:focus, .login-box select:focus { outline: none; border-color: var(--primary); }
+.field-label { display:block; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.4rem; }
+.error { color: var(--danger); font-size: 0.9rem; margin-top: -0.5rem; margin-bottom: 1rem; display: none; }
+.success-text { color: var(--success); font-size: 0.9rem; margin-top: -0.5rem; margin-bottom: 1rem; display: none; }
+.auth-links { display: flex; justify-content: space-between; margin-top: 1rem; font-size: 0.85rem; }
+.auth-links a { color: var(--primary); text-decoration: none; cursor: pointer; }
+.auth-links a:hover { text-decoration: underline; }
+
+#app { display: none; }
+
+.navbar {
+  background: var(--dark); color: white; display: flex; justify-content: space-between;
+  align-items: center; padding: 1rem 5%; position: sticky; top: 0; z-index: 30; gap: 1rem;
+}
+.logo { font-weight: bold; color: #a5b4fc; font-size:1.2rem; white-space: nowrap; }
+.nav-links { display: flex; list-style: none; gap: 1.5rem; align-items: center; flex-wrap: wrap; }
+.nav-links a { color: white; text-decoration: none; cursor: pointer; padding: 0.5rem; border-radius: 6px; transition: background 0.2s; }
+.nav-links a:hover { background: rgba(255,255,255,0.1); }
+.nav-links a.active { background: var(--primary); border-radius:6px; }
+.btn-logout { background: var(--danger); padding: 0.5rem 1rem; border-radius: 6px; }
+.btn-logout:hover { background: #b91c1c !important; }
+.menu-toggle { display: none; font-size: 1.8rem; cursor: pointer; background: none; border: none; color: white; }
+.welcome-user { color: #a5b4fc; font-size: 0.85rem; margin-right: 0.5rem; display:flex; align-items:center; gap:0.4rem; }
+
+.role-chip {
+  font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
+  padding: 0.2rem 0.5rem; border-radius: 999px; color: #fff;
+}
+.role-chip.admin { background: var(--role-admin); }
+.role-chip.teacher { background: var(--role-teacher); }
+.role-chip.student { background: var(--role-student); }
+
+/* Navbar utility buttons: theme toggle + notifications */
+.navbar-actions { display: flex; align-items: center; gap: 0.6rem; position: relative; }
+.icon-btn {
+  background: rgba(255,255,255,0.08); border: none; color: white; width: 38px; height: 38px;
+  border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem; position: relative; transition: background 0.2s;
+}
+.icon-btn:hover { background: rgba(255,255,255,0.18); }
+
+.notif-badge {
+  position: absolute; top: -2px; right: -2px; background: var(--danger); color: #fff;
+  font-size: 0.62rem; font-weight: 700; min-width: 16px; height: 16px; border-radius: 999px;
+  display: flex; align-items: center; justify-content: center; padding: 0 3px;
+}
+
+.notif-panel {
+  display: none; position: absolute; top: 48px; right: 0; width: min(340px, 90vw);
+  background: var(--surface); color: var(--text); border-radius: 12px; box-shadow: 0 15px 35px rgba(0,0,0,0.25);
+  overflow: hidden; z-index: 40; border: 1px solid var(--border);
+}
+.notif-panel.show { display: block; animation: fadeInUp 0.2s ease; }
+.notif-panel-head { display: flex; justify-content: space-between; align-items: center; padding: 0.9rem 1rem; border-bottom: 1px solid var(--border); }
+.notif-panel-head h4 { font-size: 0.95rem; }
+.notif-panel-head button { background: none; border: none; color: var(--primary); font-size: 0.75rem; font-weight: 600; cursor: pointer; }
+.notif-list { max-height: 320px; overflow-y: auto; }
+.notif-item { display: flex; gap: 0.6rem; padding: 0.8rem 1rem; border-bottom: 1px solid var(--border); cursor: pointer; }
+.notif-item:hover { background: var(--bg); }
+.notif-item:last-child { border-bottom: none; }
+.notif-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--primary); margin-top: 0.35rem; flex-shrink: 0; }
+.notif-item.read .notif-dot { background: transparent; }
+.notif-item-title { font-size: 0.85rem; font-weight: 600; }
+.notif-item-body { font-size: 0.78rem; color: var(--text-muted); margin-top: 0.15rem; }
+.notif-item-time { font-size: 0.68rem; color: var(--text-muted); margin-top: 0.3rem; }
+.notif-empty { padding: 2rem 1rem; text-align: center; color: var(--text-muted); font-size: 0.85rem; }
+
+.page { display: none; padding: 3rem 5%; min-height: 70vh; }
+.page.active { display: block; animation: fadeInUp 0.35s ease; }
+h2 { border-left:4px solid var(--primary); padding-left:10px; margin-bottom:1rem; }
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes popIn {
+  from { opacity: 0; transform: scale(0.92); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; margin: 2rem 0; }
+.card { background: var(--surface); padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: center; border-top: 4px solid var(--primary); transition: transform 0.2s, box-shadow 0.2s; animation: popIn 0.35s ease backwards; }
+.card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.12); }
+.card h3 { color: var(--text-muted); font-size: 0.9rem; }
+.card p { font-size: 2rem; font-weight: bold; margin-top:0.5rem; color: var(--text); }
+
+.table-controls { display: flex; gap: 1rem; margin: 1.5rem 0; flex-wrap: wrap; }
+.table-controls input,.table-controls select { padding: 0.7rem; border: 2px solid var(--border-strong); border-radius: 6px; background: var(--surface); color: var(--text); }
+.table-controls input:focus,.table-controls select:focus { outline: none; border-color: var(--primary); }
+.table-wrapper { overflow-x: auto; margin-top:1rem; }
+table { width: 100%; border-collapse: collapse; background: var(--surface); border-radius: 8px; overflow: hidden; }
+th, td { padding: 1rem; text-align: left; border-bottom: 1px solid var(--border); }
+th { background: var(--primary); color: white; cursor: pointer; user-select: none; }
+th:hover { background: #3730a3; }
+tbody tr { cursor: pointer; transition: background 0.15s; }
+tbody tr:hover { background: rgba(79,70,229,0.08); }
+.status-pass { color: var(--success); font-weight: 600; }
+.status-fail { color: var(--danger); font-weight: 600; }
+.no-results { text-align: center; padding: 2rem; color: var(--text-muted); }
+
+.form-box { background: var(--surface); padding: 2rem; border-radius: 12px; max-width: 600px; margin:2rem auto; }
+.form-box input,.form-box select,.form-box textarea { width: 100%; padding: 0.8rem; margin-bottom: 1rem; border: 2px solid var(--border-strong); border-radius: 6px; transition: border-color 0.2s; background: var(--surface); color: var(--text); }
+.form-box input:focus,.form-box select:focus,.form-box textarea:focus { outline: none; border-color: var(--primary); }
+.form-box fieldset { border: 1px solid var(--border); border-radius: 8px; padding: 0.9rem 1rem; margin-bottom: 1rem; }
+.form-box legend { font-size: 0.85rem; font-weight: 600; padding: 0 0.4rem; }
+.check-row { display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; padding: 0.3rem 0; }
+.check-row input { width: auto; margin: 0; }
+.btn { background: var(--primary); color: white; padding: 0.8rem 1.5rem; border: none; border-radius: 6px; cursor: pointer; font-weight:600; transition: background 0.2s, transform 0.1s; }
+.btn:hover { background: var(--primary-dark); }
+.btn:active { transform: scale(0.98); }
+.btn-outline { background: transparent; color: var(--primary); border: 2px solid var(--primary); padding: 0.7rem 1.4rem; border-radius: 6px; cursor: pointer; font-weight: 600; }
+.btn-outline:hover { background: rgba(79,70,229,0.1); }
+#successMsg, #profileSuccessMsg { color: var(--success); margin-top:1rem; display:none; font-weight:600; }
+
+.perf-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1.2rem; margin-top: 1.5rem; }
+.perf-card { background: var(--surface); border-radius: 12px; padding: 1.3rem; box-shadow: 0 4px 6px rgba(0,0,0,0.08); cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; animation: popIn 0.35s ease backwards; border-left: 5px solid var(--primary); }
+.perf-card:hover { transform: translateY(-4px); box-shadow: 0 12px 20px rgba(0,0,0,0.12); }
+.perf-card .pname { font-weight: 700; color: var(--text); font-size: 1.05rem; }
+.perf-card .psub { color: var(--text-muted); font-size: 0.8rem; margin: 0.2rem 0 0.8rem; }
+.perf-bar-track { background: var(--border); border-radius: 20px; height: 10px; overflow: hidden; }
+.perf-bar-fill { height: 100%; border-radius: 20px; width: 0%; transition: width 0.8s ease; }
+.perf-score-row { display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem; font-size: 0.85rem; }
+
+.profile-card { background: var(--surface); border-radius: 16px; max-width: 520px; margin: 2rem auto; padding: 2.5rem; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.1); animation: popIn 0.4s ease; }
+.profile-avatar { width: 90px; height: 90px; border-radius: 50%; background: var(--primary); color: white; font-size: 2rem; font-weight: 700; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; }
+.profile-card h3 { font-size: 1.4rem; color: var(--text); }
+.profile-card .pid { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem; }
+.profile-detail-row { display: flex; justify-content: space-between; padding: 0.7rem 0; border-bottom: 1px solid var(--border); text-align: left; }
+.profile-detail-row span:first-child { color: var(--text-muted); }
+.profile-detail-row span:last-child { font-weight: 600; color: var(--text); }
+.profile-bar-wrap { margin: 1.5rem 0; }
+.profile-status-badge { display: inline-block; padding: 0.4rem 1rem; border-radius: 20px; font-weight: 700; margin-top: 1rem; }
+.badge-pass { background: #dcfce7; color: var(--success); }
+.badge-fail { background: #fee2e2; color: var(--danger); }
+.empty-state { text-align: center; padding: 3rem; color: var(--text-muted); }
+
+/* My Profile (account management) page */
+.myprofile-layout { display: grid; grid-template-columns: 1fr 1.3fr; gap: 1.5rem; max-width: 900px; margin: 2rem auto 0; align-items: start; }
+.myprofile-side { background: var(--surface); border-radius: 12px; padding: 2rem 1.5rem; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.08); }
+.myprofile-side .profile-avatar { width: 76px; height: 76px; font-size: 1.6rem; }
+.myprofile-side h3 { margin-top: 0.8rem; color: var(--text); }
+.myprofile-side .role-chip { margin-top: 0.5rem; }
+
+footer { background: var(--dark); color: #cbd5e1; text-align: center; padding: 2rem; margin-top: 3rem; }
+
+@media (max-width: 900px) {
+  .myprofile-layout { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 768px) {
+ .nav-links { display: none; flex-direction: column; position: absolute; top: 60px; left: 0; width: 100%; background: var(--dark); padding: 1rem 0; z-index: 25; }
+ .nav-links.show { display: flex; }
+ .menu-toggle { display: block; }
+ .stats { grid-template-columns: 1fr; }
+ .table-controls { flex-direction: column; }
+ .perf-grid { grid-template-columns: 1fr 1fr; }
+ .welcome-user { display: none; }
+ .notif-panel { position: fixed; top: 60px; right: 0.5rem; left: 0.5rem; width: auto; }
+}
+@media (max-width: 480px) {
+ .perf-grid { grid-template-columns: 1fr; }
+ .profile-card { padding: 1.5rem; }
+}
+</style>
+</head>
+<body>
+
+<a href="#mainRegion" class="skip-link">Skip to main content</a>
+
+<section id="loginPage" class="auth-page active">
+  <div class="login-box">
+    <h2>CODIORA Portal Login</h2>
+    <p class="subtitle">Sign in to continue</p>
+    <form onsubmit="return loginUser(event)">
+      <label class="field-label" for="username">Username</label>
+      <input type="text" id="username" placeholder="Username *" required>
+      <label class="field-label" for="password">Password</label>
+      <input type="password" id="password" placeholder="Password *" required>
+      <p class="error" id="loginError" role="alert">Invalid Username or Password</p>
+      <button class="btn" style="width:100%;">Login</button>
+      <p style="text-align:center; margin-top:1rem; font-size:0.8rem; color:var(--text-muted);">
+        Demo: Admin / 1234 &nbsp;•&nbsp; Teacher / 1234 &nbsp;•&nbsp; Student / 1234
+      </p>
+      <div class="auth-links">
+        <a onclick="showAuthPage('registerPage')">Create account</a>
+        <a onclick="showAuthPage('forgotPage')">Forgot password?</a>
+      </div>
+    </form>
+  </div>
+</section>
+
+<section id="registerPage" class="auth-page">
+  <div class="login-box">
+    <h2>Create Account</h2>
+    <p class="subtitle">Register a new CODIORA account</p>
+    <form onsubmit="return registerUser(event)">
+      <input type="text" id="regUsername" placeholder="Choose Username *" required minlength="3">
+      <input type="email" id="regEmail" placeholder="Email *" required>
+      <label class="field-label" for="regRole">Role</label>
+      <select id="regRole" required>
+        <option value="student">Student</option>
+        <option value="teacher">Teacher</option>
+        <option value="admin">Administrator</option>
+      </select>
+      <input type="password" id="regPassword" placeholder="Password (min 4 chars) *" required minlength="4">
+      <input type="password" id="regConfirm" placeholder="Confirm Password *" required>
+      <p class="error" id="registerError" role="alert"></p>
+      <button class="btn" style="width:100%;">Register</button>
+      <div class="auth-links">
+        <a onclick="showAuthPage('loginPage')">&larr; Back to Login</a>
+      </div>
+    </form>
+  </div>
+</section>
+
+<section id="forgotPage" class="auth-page">
+  <div class="login-box">
+    <h2>Forgot Password</h2>
+    <p class="subtitle">Enter your username to reset your password (simulated)</p>
+    <form onsubmit="return sendResetCode(event)">
+      <input type="text" id="forgotUsername" placeholder="Username *" required>
+      <p class="error" id="forgotError" role="alert"></p>
+      <button class="btn" style="width:100%;">Send Reset Code</button>
+      <div class="auth-links">
+        <a onclick="showAuthPage('loginPage')">&larr; Back to Login</a>
+      </div>
+    </form>
+  </div>
+</section>
+
+<section id="resetPage" class="auth-page">
+  <div class="login-box">
+    <h2>Reset Password</h2>
+    <p class="subtitle" id="resetSubtitle">Enter a new password for your account</p>
+    <form onsubmit="return resetPassword(event)">
+      <input type="text" id="resetUsername" placeholder="Username" readonly>
+      <input type="password" id="resetNewPassword" placeholder="New Password *" required minlength="4">
+      <input type="password" id="resetConfirmPassword" placeholder="Confirm New Password *" required>
+      <p class="error" id="resetError" role="alert"></p>
+      <button class="btn" style="width:100%;">Update Password</button>
+      <div class="auth-links">
+        <a onclick="showAuthPage('loginPage')">&larr; Back to Login</a>
+      </div>
+    </form>
+  </div>
+</section>
+
+<div id="app">
+<nav class="navbar" aria-label="Primary">
+  <div class="logo">CODIORA Portal</div>
+  <ul class="nav-links" id="navLinks">
+    <li class="welcome-user" id="welcomeUser"></li>
+    <li><a onclick="openPage('home', event)" class="active">Home</a></li>
+    <li><a onclick="openPage('about', event)">About</a></li>
+    <li><a onclick="openPage('dashboard', event)">Dashboard</a></li>
+    <li data-roles="admin,teacher"><a onclick="openPage('add', event)">Add Student</a></li>
+    <li><a onclick="openPage('report', event)">Report</a></li>
+    <li><a onclick="openPage('myProfile', event)">My Profile</a></li>
+    <li><a onclick="openPage('contact', event)">Contact</a></li>
+    <li><a onclick="logout()" class="btn-logout">Logout</a></li>
+  </ul>
+
+  <div class="navbar-actions">
+    <button class="icon-btn" id="themeToggleBtn" onclick="toggleTheme()" aria-label="Toggle dark mode" title="Toggle dark/light mode">
+      <span id="themeIcon" aria-hidden="true">🌙</span>
+    </button>
+    <button class="icon-btn" id="notifBtn" onclick="toggleNotifPanel()" aria-haspopup="true" aria-expanded="false" aria-label="Notifications">
+      🔔
+      <span class="notif-badge" id="notifBadge" hidden>0</span>
+    </button>
+    <div class="notif-panel" id="notifPanel" role="dialog" aria-label="Notifications">
+      <div class="notif-panel-head">
+        <h4>Notifications</h4>
+        <button onclick="markAllNotifsRead()">Mark all read</button>
+      </div>
+      <div class="notif-list" id="notifList"></div>
+    </div>
+  </div>
+
+  <button class="menu-toggle" onclick="menuOpen()" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="navLinks">☰</button>
+</nav>
+
+<main id="mainRegion">
+
+<section id="home" class="page active">
+  <h2>Home Page - Analytics</h2>
+  <div class="stats" id="homeStats">
+    <div class="card"><h3>Total Students</h3><p id="totalStudents">0</p></div>
+    <div class="card"><h3>Average Score</h3><p id="avgScore">0%</p></div>
+    <div class="card"><h3>Pass Rate</h3><p id="passRate">0%</p></div>
+    <div class="card"><h3>Top Subject</h3><p id="topSubject">-</p></div>
+  </div>
+
+  <h3 style="margin-top:2.5rem;">Student Performance Cards</h3>
+  <div class="perf-grid" id="perfGridHome"></div>
+</section>
+
+<section id="about" class="page">
+  <h2>About Us</h2>
+  <p style="margin:1rem 0;">Ye portal maine CODIORA internship Week 2 ke liye banaya hai</p>
+  <div class="stats">
+    <div class="card"><h3>Mission</h3><p>Better Edu</p></div>
+    <div class="card"><h3>Vision</h3><p>Data Driven</p></div>
+    <div class="card"><h3>Tech</h3><p>HTML CSS JS</p></div>
+    <div class="card"><h3>Status</h3><p>Completed</p></div>
+  </div>
+</section>
+
+<section id="dashboard" class="page">
+  <h2 id="dashboardTitle">Student Dashboard</h2>
+  <div class="stats">
+    <div class="card"><h3>Tests Done</h3><p id="testsDone">0</p></div>
+    <div class="card"><h3>Highest</h3><p id="highestScore">0%</p></div>
+    <div class="card"><h3>Lowest</h3><p id="lowestScore">0%</p></div>
+    <div class="card"><h3>Attendance</h3><p>91%</p></div>
+  </div>
+
+  <h3 style="margin-top:2rem;" id="tableHeading">Student Records Table</h3>
+  <div class="table-controls">
+    <input type="text" id="searchInput" placeholder="Search by Name, ID..." aria-label="Search students">
+    <select id="filterSubject" onchange="filterTable()" aria-label="Filter by subject">
+      <option value="">All Subjects</option>
+      <option>Math</option><option>Science</option><option>English</option><option>Physics</option>
+    </select>
+    <select id="filterStatus" onchange="filterTable()" aria-label="Filter by status">
+      <option value="">All Status</option>
+      <option value="pass">Pass Only</option>
+      <option value="fail">Fail Only</option>
+    </select>
+    <select id="sortScore" onchange="sortTable()" aria-label="Sort by score">
+      <option value="">Sort by Score</option>
+      <option value="asc">Low to High</option>
+      <option value="desc">High to Low</option>
+    </select>
+  </div>
+  <p style="font-size:0.8rem; color:var(--text-muted); margin-top:-0.5rem;" id="tableTip">Tip: click any row to view that student's profile</p>
+  <div class="table-wrapper">
+    <table id="studentTable">
+      <thead><tr><th onclick="sortByColumn(0)">ID</th><th onclick="sortByColumn(1)">Name</th><th>Subject</th><th>Score</th><th>Status</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <h3 style="margin-top:2.5rem;">Performance Cards</h3>
+  <div class="perf-grid" id="perfGridDashboard"></div>
+</section>
+
+<section id="add" class="page">
+  <h2>Add Student Data</h2>
+  <div class="stats">
+    <div class="card"><h3>Add New</h3><p>+</p></div>
+    <div class="card"><h3>Total</h3><p id="totalCard">0</p></div>
+    <div class="card"><h3>Updated</h3><p>Today</p></div>
+    <div class="card"><h3>Check</h3><p>OK</p></div>
+  </div>
+  <div class="form-box">
+    <form onsubmit="return addStu(event)">
+      <input type="text" id="sname" placeholder="Student Name *" required minlength="3">
+      <input type="text" id="sid" placeholder="Student ID *" required pattern="00[0-9]+">
+      <select id="ssub" required>
+        <option value="">Select Subject *</option>
+        <option>Math</option><option>Science</option><option>English</option><option>Physics</option>
+      </select>
+      <input type="number" id="sscore" placeholder="Score % *" min="0" max="100" required>
+      <button class="btn">Add Record</button>
+    </form>
+    <p id="successMsg" role="status">✓ Student record added successfully!</p>
+  </div>
+</section>
+
+<section id="report" class="page">
+  <h2>Performance Report</h2>
+  <div class="stats">
+    <div class="card"><h3>Math Avg</h3><p>85%</p></div>
+    <div class="card"><h3>Science Avg</h3><p>78%</p></div>
+    <div class="card"><h3>English Avg</h3><p>80%</p></div>
+    <div class="card"><h3>Computer Avg</h3><p>90%</p></div>
+  </div>
+</section>
+
+<section id="myProfile" class="page">
+  <h2>My Profile</h2>
+  <div class="myprofile-layout">
+    <div class="myprofile-side">
+      <div class="profile-avatar" id="myProfileAvatar">-</div>
+      <h3 id="myProfileName">-</h3>
+      <p style="color:var(--text-muted); font-size:0.85rem; margin-top:0.2rem;" id="myProfileUsername">-</p>
+      <span class="role-chip" id="myProfileRoleChip">-</span>
+    </div>
+
+    <form class="form-box" style="margin:0;" onsubmit="return saveMyProfile(event)">
+      <label class="field-label" for="profileEmail">Email</label>
+      <input type="email" id="profileEmail" required>
+
+      <fieldset>
+        <legend>Change password (optional)</legend>
+        <input type="password" id="profileCurrentPass" placeholder="Current password">
+        <input type="password" id="profileNewPass" placeholder="New password (min 4 chars)" minlength="4">
+        <input type="password" id="profileConfirmPass" placeholder="Confirm new password">
+      </fieldset>
+
+      <fieldset>
+        <legend>Notification preferences</legend>
+        <label class="check-row"><input type="checkbox" id="prefEmail" checked> Email me about important updates</label>
+        <label class="check-row"><input type="checkbox" id="prefDigest" checked> Weekly summary digest</label>
+        <label class="check-row"><input type="checkbox" id="prefMentions"> Only notify me when mentioned</label>
+      </fieldset>
+
+      <p class="error" id="profileError" role="alert"></p>
+      <button class="btn" style="width:100%;">Save Changes</button>
+      <p id="profileSuccessMsg" role="status">✓ Profile updated successfully!</p>
+    </form>
+  </div>
+</section>
+
+<section id="profile" class="page">
+  <h2>Student Profile</h2>
+  <div id="profileContent">
+    <div class="empty-state">Select a student from the Dashboard to view their profile.</div>
+  </div>
+</section>
+
+<section id="contact" class="page">
+  <h2>Contact Us</h2>
+  <div class="stats">
+    <div class="card"><h3>Support</h3><p>24/7 Help</p></div>
+    <div class="card"><h3>Feedback</h3><p>We Listen</p></div>
+    <div class="card"><h3>Privacy</h3><p>Secure</p></div>
+    <div class="card"><h3>Response</h3><p>Quick</p></div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <p>CODIORA | Our Code Builds Your Vision</p>
+  <p>Internship Task 2026 | Made by: [hafsa]</p>
+</footer>
+</div>
+
+<div id="liveRegion" class="skip-link" style="position:absolute;left:-9999px;" role="status" aria-live="polite"></div>
+
+<script>
+const STUDENTS_KEY = 'codiora_students';
+const USERS_KEY = 'codiora_users';
+const THEME_KEY = 'codiora_theme';
+const NOTIFS_KEY = 'codiora_notifs';
+
+const memoryStore = {};
+function memGet(key){ return Object.prototype.hasOwnProperty.call(memoryStore, key) ? memoryStore[key] : null; }
+function memSet(key, value){ memoryStore[key] = value; }
+
+let studentsData = [];
+let users = [];
+let currentUser = null;  
+let currentRole = null;   
+let resetTargetUser = null;
+let notifications = [];
+
+const ROLE_LABELS = { admin: 'Administrator', teacher: 'Teacher', student: 'Student' };
+
+const DEFAULT_NOTIFS = {
+  admin: [
+    { title: 'New enrollment application', body: 'A new Grade 9 application needs review.', time: '10m ago', unread: true },
+    { title: 'Budget approved', body: 'Finance approved the Science Dept budget.', time: '1h ago', unread: true },
+    { title: 'Staff leave request', body: 'A teacher requested 3 days of leave.', time: '4h ago', unread: false },
+  ],
+  teacher: [
+    { title: 'New submission', body: 'Students submitted the latest assignment.', time: '20m ago', unread: true },
+    { title: 'Parent message', body: "A parent asked about the upcoming test.", time: '2h ago', unread: true },
+    { title: 'Schedule change', body: 'Room B4 has moved to Room C1 on Thursday.', time: '6h ago', unread: false },
+  ],
+  student: [
+    { title: 'Assignment graded', body: 'Your latest submission has been graded.', time: '30m ago', unread: true },
+    { title: 'New announcement', body: 'Your teacher posted an update.', time: '3h ago', unread: true },
+    { title: 'Deadline reminder', body: 'A project draft is due tomorrow.', time: '5h ago', unread: false },
+  ],
+};
+
+function loadData(){
+  let storedStudents = memGet(STUDENTS_KEY);
+  if(storedStudents){
+    studentsData = JSON.parse(storedStudents);
+  } else {
+    studentsData = [
+      {id: "001", name: "Ali Khan", subject: "Math", score: 88},
+      {id: "002", name: "Sara Ahmed", subject: "Science", score: 92},
+      {id: "003", name: "Usman Malik", subject: "English", score: 67},
+      {id: "004", name: "Ayesha", subject: "Math", score: 45, linkedUser: "Student"}
+    ];
+    saveStudents();
+  }
+
+  let storedUsers = memGet(USERS_KEY);
+  if(storedUsers){
+    users = JSON.parse(storedUsers);
+   
+    let changed = false;
+    users.forEach(u => { if(!u.role){ u.role = 'student'; changed = true; } });
+    if(changed) saveUsers();
+  } else {
+    users = [
+      {username: "Admin", email: "admin@codiora.com", password: "1234", role: "admin"},
+      {username: "Teacher", email: "teacher@codiora.com", password: "1234", role: "teacher"},
+      {username: "Student", email: "student@codiora.com", password: "1234", role: "student"}
+    ];
+    saveUsers();
+  }
+}
+function saveStudents(){ memSet(STUDENTS_KEY, JSON.stringify(studentsData)); }
+function saveUsers(){ memSet(USERS_KEY, JSON.stringify(users)); }
+
+/* ---------------- Auth ---------------- */
+function showAuthPage(id){
+  document.querySelectorAll('.auth-page').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.auth-page .error').forEach(e => { e.style.display = 'none'; e.innerText = ''; });
+}
+
+function loginUser(e){
+  e.preventDefault();
+  let user = document.getElementById('username').value.trim();
+  let pass = document.getElementById('password').value;
+  let found = users.find(u => u.username === user && u.password === pass);
+
+  if(found){
+    currentUser = found.username;
+    currentRole = found.role || 'student';
+    document.getElementById('loginError').style.display = 'none';
+    document.getElementById('loginPage').classList.remove('active');
+    document.getElementById('app').style.display = 'block';
+    enterApp();
+  } else {
+    document.getElementById('loginError').style.display = 'block';
+  }
+  return false;
+}
+
+function registerUser(e){
+  e.preventDefault();
+  let uname = document.getElementById('regUsername').value.trim();
+  let email = document.getElementById('regEmail').value.trim();
+  let role = document.getElementById('regRole').value;
+  let pass = document.getElementById('regPassword').value;
+  let confirm = document.getElementById('regConfirm').value;
+  let errEl = document.getElementById('registerError');
+
+  if(users.some(u => u.username.toLowerCase() === uname.toLowerCase())){
+    errEl.innerText = 'Username already taken'; errEl.style.display = 'block'; return false;
+  }
+  if(pass !== confirm){
+    errEl.innerText = 'Passwords do not match'; errEl.style.display = 'block'; return false;
+  }
+
+  users.push({username: uname, email, password: pass, role});
+  saveUsers();
+  errEl.style.display = 'none';
+  e.target.reset();
+  alert('Account created! You can now log in.');
+  showAuthPage('loginPage');
+  return false;
+}
+
+function sendResetCode(e){
+  e.preventDefault();
+  let uname = document.getElementById('forgotUsername').value.trim();
+  let errEl = document.getElementById('forgotError');
+  let found = users.find(u => u.username.toLowerCase() === uname.toLowerCase());
+
+  if(!found){
+    errEl.innerText = 'No account found with that username'; errEl.style.display = 'block'; return false;
+  }
+
+  errEl.style.display = 'none';
+  resetTargetUser = found.username;
+  document.getElementById('resetUsername').value = found.username;
+  document.getElementById('resetSubtitle').innerText = 'Reset code "sent" (simulated) — set your new password below';
+  showAuthPage('resetPage');
+  return false;
+}
+
+function resetPassword(e){
+  e.preventDefault();
+  let newPass = document.getElementById('resetNewPassword').value;
+  let confirmPass = document.getElementById('resetConfirmPassword').value;
+  let errEl = document.getElementById('resetError');
+
+  if(newPass !== confirmPass){
+    errEl.innerText = 'Passwords do not match'; errEl.style.display = 'block'; return false;
+  }
+
+  let user = users.find(u => u.username === resetTargetUser);
+  if(user){
+    user.password = newPass;
+    saveUsers();
+    errEl.style.display = 'none';
+    alert('Password updated! Please log in with your new password.');
+    e.target.reset();
+    showAuthPage('loginPage');
+  }
+  return false;
+}
+
+function logout(){
+  currentUser = null;
+  currentRole = null;
+  document.getElementById('app').style.display = 'none';
+  showAuthPage('loginPage');
+  document.getElementById('username').value = '';
+  document.getElementById('password').value = '';
+  closeNotifPanel();
+}
+
+function enterApp(){
+  document.getElementById('welcomeUser').innerHTML =
+    'Hi, ' + currentUser + ' <span class="role-chip ' + currentRole + '">' + ROLE_LABELS[currentRole] + '</span>';
+
+  renderNavForRole();
+  initTheme();
+  initNotifications();
+
+  document.getElementById('dashboardTitle').textContent =
+    currentRole === 'student' ? 'My Dashboard' : (ROLE_LABELS[currentRole] + ' Dashboard');
+  document.getElementById('tableHeading').textContent =
+    currentRole === 'student' ? 'My Records' : 'Student Records Table';
+  document.getElementById('tableTip').style.display = currentRole === 'student' ? 'none' : 'block';
+
+  openPage('home', null);
+}
+
+function renderNavForRole(){
+  document.querySelectorAll('#navLinks > li[data-roles]').forEach(li => {
+    let allowed = li.getAttribute('data-roles').split(',');
+    li.style.display = allowed.includes(currentRole) ? '' : 'none';
+  });
+}
+
+function getVisibleStudents(){
+  if(currentRole === 'student'){
+    return studentsData.filter(s => s.linkedUser === currentUser);
+  }
+  return studentsData;
+}
+
+function openPage(id, event){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.nav-links a').forEach(a=>a.classList.remove('active'));
+  if(event && event.target) event.target.classList.add('active');
+  window.scrollTo(0,0);
+  document.getElementById('navLinks').classList.remove('show');
+  if(id === 'home' || id === 'dashboard'){
+    updateAllStats();
+    renderTable();
+  }
+  if(id === 'myProfile'){
+    renderMyProfile();
+  }
+  closeNotifPanel();
+}
+
+function menuOpen(){
+  let nav = document.getElementById('navLinks');
+  let btn = document.querySelector('.menu-toggle');
+  let isOpen = nav.classList.toggle('show');
+  btn.setAttribute('aria-expanded', String(isOpen));
+}
+function initTheme(){
+  let saved = memGet(THEME_KEY) || 'light';
+  applyTheme(saved);
+}
+function applyTheme(theme){
+  document.body.classList.toggle('dark', theme === 'dark');
+  document.getElementById('themeIcon').textContent = theme === 'dark' ? '☀️' : '🌙';
+  document.getElementById('themeToggleBtn').setAttribute('aria-pressed', String(theme === 'dark'));
+  memSet(THEME_KEY, theme);
+}
+function toggleTheme(){
+  applyTheme(document.body.classList.contains('dark') ? 'light' : 'dark');
+}
+
+function initNotifications(){
+  let stored = memGet(NOTIFS_KEY + '_' + currentRole);
+  if(stored){
+    notifications = JSON.parse(stored);
+  } else {
+    notifications = (DEFAULT_NOTIFS[currentRole] || []).map((n, i) => ({ id: i, ...n }));
+    saveNotifications();
+  }
+  renderNotifications();
+}
+function saveNotifications(){
+  memSet(NOTIFS_KEY + '_' + currentRole, JSON.stringify(notifications));
+}
+function renderNotifications(){
+  let unread = notifications.filter(n => n.unread).length;
+  let badge = document.getElementById('notifBadge');
+  badge.hidden = unread === 0;
+  badge.textContent = unread;
+
+  let list = document.getElementById('notifList');
+  if(notifications.length === 0){
+    list.innerHTML = '<div class="notif-empty">No notifications yet.</div>';
+    return;
+  }
+  list.innerHTML = notifications.map(n => `
+    <div class="notif-item ${n.unread ? '' : 'read'}" data-id="${n.id}" onclick="markNotifRead(${n.id})">
+      <span class="notif-dot"></span>
+      <div>
+        <p class="notif-item-title">${n.title}</p>
+        <p class="notif-item-body">${n.body}</p>
+        <p class="notif-item-time">${n.time}</p>
+      </div>
+    </div>
+  `).join('');
+}
+function markNotifRead(id){
+  let n = notifications.find(x => x.id === id);
+  if(n) n.unread = false;
+  saveNotifications();
+  renderNotifications();
+}
+function markAllNotifsRead(){
+  notifications.forEach(n => n.unread = false);
+  saveNotifications();
+  renderNotifications();
+  announce('All notifications marked as read');
+}
+function toggleNotifPanel(){
+  let panel = document.getElementById('notifPanel');
+  let btn = document.getElementById('notifBtn');
+  let isOpen = panel.classList.toggle('show');
+  btn.setAttribute('aria-expanded', String(isOpen));
+}
+function closeNotifPanel(){
+  document.getElementById('notifPanel').classList.remove('show');
+  document.getElementById('notifBtn').setAttribute('aria-expanded', 'false');
+}
+document.addEventListener('click', function(e){
+  let panel = document.getElementById('notifPanel');
+  let btn = document.getElementById('notifBtn');
+  if(panel && panel.classList.contains('show') && !panel.contains(e.target) && e.target !== btn){
+    closeNotifPanel();
+  }
+});
+document.addEventListener('keydown', function(e){
+  if(e.key === 'Escape') closeNotifPanel();
+});
+
+function announce(msg){
+  document.getElementById('liveRegion').textContent = msg;
+}
+function renderMyProfile(){
+  let user = users.find(u => u.username === currentUser);
+  if(!user) return;
+  document.getElementById('myProfileAvatar').textContent = currentUser.substring(0,2).toUpperCase();
+  document.getElementById('myProfileName').textContent = currentUser;
+  document.getElementById('myProfileUsername').textContent = '@' + currentUser.toLowerCase();
+  let chip = document.getElementById('myProfileRoleChip');
+  chip.textContent = ROLE_LABELS[currentRole];
+  chip.className = 'role-chip ' + currentRole;
+  document.getElementById('profileEmail').value = user.email || '';
+  document.getElementById('profileCurrentPass').value = '';
+  document.getElementById('profileNewPass').value = '';
+  document.getElementById('profileConfirmPass').value = '';
+  document.getElementById('profileError').style.display = 'none';
+}
+
+function saveMyProfile(e){
+  e.preventDefault();
+  let user = users.find(u => u.username === currentUser);
+  let errEl = document.getElementById('profileError');
+  if(!user) return false;
+
+  let email = document.getElementById('profileEmail').value.trim();
+  let curPass = document.getElementById('profileCurrentPass').value;
+  let newPass = document.getElementById('profileNewPass').value;
+  let confirmPass = document.getElementById('profileConfirmPass').value;
+
+  if(newPass || confirmPass || curPass){
+    if(curPass !== user.password){
+      errEl.innerText = 'Current password is incorrect'; errEl.style.display = 'block'; return false;
+    }
+    if(newPass !== confirmPass){
+      errEl.innerText = 'New passwords do not match'; errEl.style.display = 'block'; return false;
+    }
+    if(newPass.length < 4){
+      errEl.innerText = 'New password must be at least 4 characters'; errEl.style.display = 'block'; return false;
+    }
+    user.password = newPass;
+  }
+
+  user.email = email;
+  saveUsers();
+  errEl.style.display = 'none';
+
+  let successEl = document.getElementById('profileSuccessMsg');
+  successEl.style.display = 'block';
+  announce('Profile updated successfully');
+  setTimeout(()=>{ successEl.style.display = 'none'; }, 3000);
+
+  document.getElementById('profileCurrentPass').value = '';
+  document.getElementById('profileNewPass').value = '';
+  document.getElementById('profileConfirmPass').value = '';
+  return false;
+}
+
+function scoreColor(score){
+  if(score >= 80) return '#16a34a';
+  if(score >= 50) return '#4f46e5';
+  return '#dc2626';
+}
+
+function renderPerformanceCards(containerId, data){
+  let container = document.getElementById(containerId);
+  if(!container) return;
+  container.innerHTML = '';
+  data.forEach((s, i) => {
+    let color = scoreColor(s.score);
+    let card = document.createElement('div');
+    card.className = 'perf-card';
+    card.style.animationDelay = (i * 0.05) + 's';
+    card.style.borderLeftColor = color;
+    card.onclick = () => viewProfile(s.id);
+    card.innerHTML = `
+      <div class="pname">${s.name}</div>
+      <div class="psub">${s.subject} &bull; ID ${s.id}</div>
+      <div class="perf-bar-track"><div class="perf-bar-fill" style="background:${color};" data-target="${s.score}"></div></div>
+      <div class="perf-score-row"><span>Score</span><strong style="color:${color}">${s.score}%</strong></div>
+    `;
+    container.appendChild(card);
+  });
+
+  requestAnimationFrame(() => {
+    container.querySelectorAll('.perf-bar-fill').forEach(bar => {
+      let target = bar.getAttribute('data-target');
+      setTimeout(()=>{ bar.style.width = target + '%'; }, 30);
+    });
+  });
+}
+
+function updateAllStats(){
+  let visible = getVisibleStudents();
+  let total = visible.length;
+  let passCount = visible.filter(s => s.score >= 50).length;
+  let avg = total > 0? Math.round(visible.reduce((a,b) => a + b.score, 0) / total) : 0;
+  let scores = visible.map(s => s.score);
+  let highest = total > 0? Math.max(...scores) : 0;
+  let lowest = total > 0? Math.min(...scores) : 0;
+
+  let subjCount = {};
+  visible.forEach(s => subjCount[s.subject] = (subjCount[s.subject]||0)+1);
+  let topSubj = Object.keys(subjCount).length ? Object.keys(subjCount).reduce((a,b) => subjCount[a] > subjCount[b]? a : b) : "-";
+
+  document.getElementById('totalStudents').innerText = total;
+  document.getElementById('avgScore').innerText = avg + '%';
+  document.getElementById('passRate').innerText = total > 0? Math.round((passCount/total)*100) + '%' : '0%';
+  document.getElementById('topSubject').innerText = topSubj;
+
+  document.getElementById('testsDone').innerText = total;
+  document.getElementById('highestScore').innerText = highest + '%';
+  document.getElementById('lowestScore').innerText = lowest + '%';
+  document.getElementById('totalCard').innerText = total;
+
+  renderPerformanceCards('perfGridHome', visible);
+  renderPerformanceCards('perfGridDashboard', visible);
+}
+
+function addStu(e){
+  e.preventDefault();
+
+  let name = document.getElementById('sname').value.trim();
+  let id = document.getElementById('sid').value.trim();
+  let subject = document.getElementById('ssub').value;
+  let score = parseInt(document.getElementById('sscore').value);
+
+  if(name.length < 3){ alert("Name must be 3+ characters"); return false; }
+  if(studentsData.some(s => s.id === id)){ alert("Student ID already exists"); return false; }
+  if(score < 0 || score > 100){ alert("Score must be 0-100"); return false; }
+
+  studentsData.push({id, name, subject, score});
+  saveStudents();
+
+  renderTable();
+  updateAllStats();
+
+  document.getElementById('successMsg').style.display = 'block';
+  setTimeout(()=>{ document.getElementById('successMsg').style.display = 'none'; }, 3000);
+  e.target.reset();
+  return false;
+}
+
+function renderTable(){
+  renderFilteredTable(getVisibleStudents());
+}
+
+function rowHTML(s){
+  let status = s.score >= 50? 'Pass' : 'Fail';
+  let statusClass = s.score >= 50? 'status-pass' : 'status-fail';
+  return `<tr onclick="viewProfile('${s.id}')" tabindex="0"><td>${s.id}</td><td>${s.name}</td><td>${s.subject}</td><td>${s.score}</td><td class="${statusClass}">${status}</td></tr>`;
+}
+
+function renderFilteredTable(data){
+  let tbody = document.querySelector('#studentTable tbody');
+  if(data.length === 0){
+    tbody.innerHTML = '<tr><td colspan="5" class="no-results">No matching students found</td></tr>';
+    return;
+  }
+  tbody.innerHTML = data.map(rowHTML).join('');
+}
+
+function filterTable(){
+  let search = document.getElementById('searchInput').value.toLowerCase();
+  let subject = document.getElementById('filterSubject').value;
+  let status = document.getElementById('filterStatus').value;
+  let base = getVisibleStudents();
+
+  let filtered = base.filter(s => {
+    let matchesSearch = s.name.toLowerCase().includes(search) || s.id.toLowerCase().includes(search);
+    let matchesSubject = subject === "" || s.subject === subject;
+    let matchesStatus = status === "" || (status === "pass" && s.score >= 50) || (status === "fail" && s.score < 50);
+    return matchesSearch && matchesSubject && matchesStatus;
+  });
+  renderFilteredTable(filtered);
+}
+
+
+let searchDebounceTimer;
+document.addEventListener('DOMContentLoaded', function(){
+  let searchInput = document.getElementById('searchInput');
+  if(searchInput){
+    searchInput.addEventListener('input', function(){
+      clearTimeout(searchDebounceTimer);
+      searchDebounceTimer = setTimeout(filterTable, 180);
+    });
+  }
+});
+
+function sortTable(){
+  let order = document.getElementById('sortScore').value;
+  if(order === "asc") studentsData.sort((a,b) => a.score - b.score);
+  if(order === "desc") studentsData.sort((a,b) => b.score - a.score);
+  saveStudents();
+  filterTable();
+}
+
+function sortByColumn(colIndex){
+  studentsData.sort((a,b) => {
+    let valA = colIndex === 0? a.id : a.name.toLowerCase();
+    let valB = colIndex === 0? b.id : b.name.toLowerCase();
+    return valA > valB? 1 : -1;
+  });
+  saveStudents();
+  filterTable();
+}
+
+function viewProfile(id){
+  let s = studentsData.find(st => st.id === id);
+  let container = document.getElementById('profileContent');
+  if(!s){
+    container.innerHTML = '<div class="empty-state">Student not found.</div>';
+  } else {
+    let status = s.score >= 50 ? 'Pass' : 'Fail';
+    let badgeClass = s.score >= 50 ? 'badge-pass' : 'badge-fail';
+    let color = scoreColor(s.score);
+    let initials = s.name.split(' ').map(n => n[0]).join('').substring(0,2).toUpperCase();
+    container.innerHTML = `
+      <div class="profile-card">
+        <div class="profile-avatar">${initials}</div>
+        <h3>${s.name}</h3>
+        <div class="pid">Student ID: ${s.id}</div>
+        <div class="profile-detail-row"><span>Subject</span><span>${s.subject}</span></div>
+        <div class="profile-detail-row"><span>Score</span><span>${s.score}%</span></div>
+        <div class="profile-detail-row"><span>Status</span><span>${status}</span></div>
+        <div class="profile-bar-wrap">
+          <div class="perf-bar-track"><div class="perf-bar-fill" id="profileBar" style="background:${color};"></div></div>
+        </div>
+        <span class="profile-status-badge ${badgeClass}">${status}</span><br>
+        <button class="btn-outline" style="margin-top:1.5rem;" onclick="openPage('dashboard', {target:document.querySelector('.nav-links a')})">&larr; Back to Dashboard</button>
+      </div>
+    `;
+    setTimeout(()=>{
+      let bar = document.getElementById('profileBar');
+      if(bar) bar.style.width = s.score + '%';
+    }, 30);
+  }
+
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('profile').classList.add('active');
+  document.querySelectorAll('.nav-links a').forEach(a=>a.classList.remove('active'));
+  window.scrollTo(0,0);
+  document.getElementById('navLinks').classList.remove('show');
+}
+
+loadData();
+</script>
+</body>
+</html>
